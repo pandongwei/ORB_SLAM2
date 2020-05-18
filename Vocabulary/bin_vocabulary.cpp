@@ -10,6 +10,7 @@ bool load_as_text(ORB_SLAM2::ORBVocabulary* voc, const std::string infile) {
   return res;
 }
 
+
 void load_as_xml(ORB_SLAM2::ORBVocabulary* voc, const std::string infile) {
   clock_t tStart = clock();
   voc->load(infile);
