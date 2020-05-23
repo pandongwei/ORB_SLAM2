@@ -930,7 +930,7 @@ bool Initializer::ReconstructH(vector<bool> &vbMatchesInliers, cv::Mat &H21, cv:
 // |y'p2'- p1'|     |0|
 
 /**
- * @brief 给定投影矩阵P1,P2和图像上的点kp1,kp2，从而恢复3D坐标
+ * @brief 三角化，给定投影矩阵P1,P2和图像上的点kp1,kp2，从而恢复3D坐标
  *
  * @param kp1 特征点, in reference frame
  * @param kp2 特征点, in current frame

@@ -32,7 +32,7 @@
 
 namespace ORB_SLAM2
 {
-
+// 准备工作，得到对应点在相机坐标系下的3d坐标mvX3Dc1,mvX3Dc2，在图像上的投影坐标mvP1im1,mvP2im2，以及其误差阈值
 Sim3Solver::Sim3Solver(KeyFrame *pKF1, KeyFrame *pKF2, const vector<MapPoint *> &vpMatched12, const bool bFixScale):
     mnIterations(0), mnBestInliers(0), mbFixScale(bFixScale)
 {
@@ -293,7 +293,7 @@ void Sim3Solver::ComputeSim3(cv::Mat &P1, cv::Mat &P2)
 
     cv::eigen(N,eval,evec); //evec[0] is the quaternion of the desired rotation
 
-    // N矩阵最大特征值（第一个特征值）对应特征向量就是要求的四元数死（q0 q1 q2 q3）
+    // N矩阵最大特征值（第一个特征值）对应特征向量就是要求的四元数（q0 q1 q2 q3）
     // 将(q1 q2 q3)放入vec行向量，vec就是四元数旋转轴乘以sin(ang/2)
     cv::Mat vec(1,3,evec.type());
     (evec.row(0).colRange(1,4)).copyTo(vec); //extract imaginary part of the quaternion (sin*axis)
@@ -301,7 +301,7 @@ void Sim3Solver::ComputeSim3(cv::Mat &P1, cv::Mat &P2)
     // Rotation angle. sin is the norm of the imaginary part, cos is the real part
     double ang=atan2(norm(vec),evec.at<float>(0,0));
 
-    vec = 2*ang*vec/norm(vec); //Angle-axis representation. quaternion angle is the half
+    vec = 2*ang*vec/norm(vec); //Angle-axis representation. quaternion angle is the half.  vec = theta*n
 
     mR12i.create(3,3,P1.type());
 
@@ -361,7 +361,7 @@ void Sim3Solver::ComputeSim3(cv::Mat &P1, cv::Mat &P2)
 void Sim3Solver::CheckInliers()
 {
     vector<cv::Mat> vP1im2, vP2im1;
-    Project(mvX3Dc2,vP2im1,mT12i,mK1);// 把2系中的3D经过Sim3变换(mT12i)到1系中计算重投影坐标
+    Project(mvX3Dc2,vP2im1,mT12i,mK1);// 把2系中的3D经过Sim3变换(mT12i)到1系中计算重投影坐标，K为1系的内参
     Project(mvX3Dc1,vP1im2,mT21i,mK2);// 把1系中的3D经过Sim3变换(mT21i)到2系中计算重投影坐标
 
     mnInliersi=0;
@@ -374,7 +374,7 @@ void Sim3Solver::CheckInliers()
         const float err1 = dist1.dot(dist1);
         const float err2 = dist2.dot(dist2);
 
-        if(err1<mvnMaxError1[i] && err2<mvnMaxError2[i])
+        if(err1<mvnMaxError1[i] && err2<mvnMaxError2[i]) // mvnMaxError1/2为之前求到的误差阈值,小于阈值为inliers
         {
             mvbInliersi[i]=true;
             mnInliersi++;

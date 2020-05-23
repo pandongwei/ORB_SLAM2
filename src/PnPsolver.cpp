@@ -247,7 +247,7 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &bNoMore, vector<bool> &vbInlie
         vAvailableIndices = mvAllIndices;
 
         // Get min set of points
-        for(short i = 0; i < mRansacMinSet; ++i)
+        for(short i = 0; i < mRansacMinSet; ++i) // mRansacMinSet=4
         {
             int randi = DUtils::Random::RandomInt(0, vAvailableIndices.size()-1);
 
@@ -257,7 +257,7 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &bNoMore, vector<bool> &vbInlie
             add_correspondence(mvP3Dw[idx].x,mvP3Dw[idx].y,mvP3Dw[idx].z,mvP2D[idx].x,mvP2D[idx].y);
 
             // ！！！将已经被选中参与ransac的点去除（用vector最后一个点覆盖），避免抽取同一个数据参与ransac
-            vAvailableIndices[randi] = vAvailableIndices.back();
+            vAvailableIndices[randi] = vAvailableIndices.back(); //这样做稍微高效，因为pop特定位置的点并不高效
             vAvailableIndices.pop_back();
         }
 
@@ -321,7 +321,7 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &bNoMore, vector<bool> &vbInlie
 
     return cv::Mat();
 }
-
+// 在得到最优的Rt和对应的inliers之后，用全部inliers重新算一次Rt，结果更加精确
 bool PnPsolver::Refine()
 {
     vector<int> vIndices;
@@ -608,7 +608,7 @@ double PnPsolver::compute_pose(double R[3][3], double t[3])
   cvReleaseMat(&M);
 
   // 上述通过求解齐次最小二乘获得解不具有尺度，这里通过构造另外一个最小二乘（L*Betas = Rho）来求解尺度Betas
-  // L_6x10 * Betas10x1 = Rho_6x1
+  // L_6x10 * Betas10x1 = Rho_6x1， 这里取N=4
   double l_6x10[6 * 10], rho[6];
   CvMat L_6x10 = cvMat(6, 10, CV_64F, l_6x10);
   CvMat Rho    = cvMat(6,  1, CV_64F, rho);
@@ -627,25 +627,25 @@ double PnPsolver::compute_pose(double R[3][3], double t[3])
   // 最后计算R t
 
   // Betas10        = [B00 B01 B11 B02 B12 B22 B03 B13 B23 B33]
-  // betas_approx_1 = [B00 B01     B02         B03]
+  // betas_approx_1 = [B00  B01    B02    B03]
   // 建模为除B11、B12、B13、B14四个参数外其它参数均为0进行最小二乘求解，求出B0、B1、B2、B3粗略解
   find_betas_approx_1(&L_6x10, &Rho, Betas[1]);
   // 高斯牛顿法优化B0、B1、B2、B3
   gauss_newton(&L_6x10, &Rho, Betas[1]);
   rep_errors[1] = compute_R_and_t(ut, Betas[1], Rs[1], ts[1]);
 
-  // betas_approx_2 = [B00 B01 B11                            ]
+  // betas_approx_2 = [B00 B01 B11 ]
   // 建模为除B00、B01、B11三个参数外其它参数均为0进行最小二乘求解，求出B0、B1、B2、B3粗略解
   find_betas_approx_2(&L_6x10, &Rho, Betas[2]);
   gauss_newton(&L_6x10, &Rho, Betas[2]);
   rep_errors[2] = compute_R_and_t(ut, Betas[2], Rs[2], ts[2]);
 
-  // betas_approx_3 = [B00 B01 B11 B02 B12                    ]
+  // betas_approx_3 = [B00 B01 B11 B02 B12 ]
   // 建模为除B00、B01、B11、B02、B12五个参数外其它参数均为0进行最小二乘求解，求出B0、B1、B2、B3粗略解
   find_betas_approx_3(&L_6x10, &Rho, Betas[3]);
   gauss_newton(&L_6x10, &Rho, Betas[3]);
   rep_errors[3] = compute_R_and_t(ut, Betas[3], Rs[3], ts[3]);
-
+  // 取误差最小那个
   int N = 1;
   if (rep_errors[2] < rep_errors[1]) N = 2;
   if (rep_errors[3] < rep_errors[N]) N = 3;
