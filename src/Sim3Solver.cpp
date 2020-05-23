@@ -38,7 +38,7 @@ Sim3Solver::Sim3Solver(KeyFrame *pKF1, KeyFrame *pKF2, const vector<MapPoint *> 
 {
     mpKF1 = pKF1;
     mpKF2 = pKF2;
-
+    // 将keyframe1中的mappoints取出来
     vector<MapPoint*> vpKeyFrameMP1 = pKF1->GetMapPointMatches();
 
     mN1 = vpMatched12.size();
@@ -49,7 +49,7 @@ Sim3Solver::Sim3Solver(KeyFrame *pKF1, KeyFrame *pKF2, const vector<MapPoint *> 
     mvnIndices1.reserve(mN1);
     mvX3Dc1.reserve(mN1);
     mvX3Dc2.reserve(mN1);
-
+    // 从world系到camera系的
     cv::Mat Rcw1 = pKF1->GetRotation();
     cv::Mat tcw1 = pKF1->GetTranslation();
     cv::Mat Rcw2 = pKF2->GetRotation();
@@ -64,7 +64,7 @@ Sim3Solver::Sim3Solver(KeyFrame *pKF1, KeyFrame *pKF2, const vector<MapPoint *> 
         // 如果该特征点在pKF1中有匹配
         if(vpMatched12[i1])
         {
-            // step1: 根据vpMatched12配对比配的MapPoint： pMP1和pMP2
+            // step1: 根据vpMatched12配对匹配的MapPoint： pMP1和pMP2
             MapPoint* pMP1 = vpKeyFrameMP1[i1];
             MapPoint* pMP2 = vpMatched12[i1];
 
@@ -76,7 +76,7 @@ Sim3Solver::Sim3Solver(KeyFrame *pKF1, KeyFrame *pKF2, const vector<MapPoint *> 
 
             // step2：计算允许的重投影误差阈值：mvnMaxError1和mvnMaxError2
             // 注：是相对当前位姿投影3D点得到的图像坐标，见step6
-            // step2.1：根据匹配的MapPoint找到对应匹配特征点的索引：indexKF1和indexKF2
+            // step2.1：根据匹配的MapPoint(3D点)找到对应匹配特征点(2D点)的索引：indexKF1和indexKF2
             int indexKF1 = pMP1->GetIndexInKeyFrame(pKF1);
             int indexKF2 = pMP2->GetIndexInKeyFrame(pKF2);
 
@@ -91,7 +91,7 @@ Sim3Solver::Sim3Solver(KeyFrame *pKF1, KeyFrame *pKF2, const vector<MapPoint *> 
             const float sigmaSquare1 = pKF1->mvLevelSigma2[kp1.octave];
             const float sigmaSquare2 = pKF2->mvLevelSigma2[kp2.octave];
 
-            mvnMaxError1.push_back(9.210*sigmaSquare1);
+            mvnMaxError1.push_back(9.210*sigmaSquare1); // 9.210为基础阈值
             mvnMaxError2.push_back(9.210*sigmaSquare2);
 
             // mvpMapPoints1和mvpMapPoints2是匹配的MapPoints容器
@@ -106,7 +106,7 @@ Sim3Solver::Sim3Solver(KeyFrame *pKF1, KeyFrame *pKF2, const vector<MapPoint *> 
             cv::Mat X3D2w = pMP2->GetWorldPos();
             mvX3Dc2.push_back(Rcw2*X3D2w+tcw2);
 
-            mvAllIndices.push_back(idx);
+            mvAllIndices.push_back(idx); // 作用：在RANSAC时，防止随机抽到相同点对（需要三对点）
             idx++;
         }
     }
@@ -115,7 +115,7 @@ Sim3Solver::Sim3Solver(KeyFrame *pKF1, KeyFrame *pKF2, const vector<MapPoint *> 
     mK1 = pKF1->mK;
     mK2 = pKF2->mK;
 
-    // step6：记录计算两针Sim3之前3D mappoint在图像上的投影坐标：mvP1im1和mvP2im2
+    // step6：记录计算两帧Sim3之前3D mappoint在图像上的投影坐标：mvP1im1和mvP2im2
     FromCameraToImage(mvX3Dc1,mvP1im1,mK1);
     FromCameraToImage(mvX3Dc2,mvP2im2,mK2);
 

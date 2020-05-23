@@ -1,4 +1,4 @@
-/**
+/*
 * This file is part of ORB-SLAM2.
 *
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
@@ -101,7 +101,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     // Max/Min Frames to insert keyframes and to check relocalisation
     mMinFrames = 0;
     mMaxFrames = fps;
-
+    // 打印所有相机参数
     cout << endl << "Camera Parameters: " << endl;
     cout << "- fx: " << fx << endl;
     cout << "- fy: " << fy << endl;
@@ -173,7 +173,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     }
 
 }
-
+// 简单的赋值函数
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
 {
     mpLocalMapper=pLocalMapper;
@@ -192,7 +192,7 @@ void Tracking::SetViewer(Viewer *pViewer)
 // 输入左右目图像，可以为RGB、BGR、RGBA、GRAY
 // 1、将图像转为mImGray和imGrayRight并初始化mCurrentFrame
 // 2、进行tracking过程
-// 输出世界坐标系到该帧相机坐标系的变换矩阵
+// 输出世界坐标系到该帧相机坐标系的变换矩阵，世界坐标系是初始帧的坐标
 cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp)
 {
     mImGray = imRectLeft;
@@ -1043,6 +1043,7 @@ void Tracking::UpdateLastFrame()
     mLastFrame.SetPose(Tlr*pRef->GetPose()); // Tlr*Trw = Tlw 1:last r:reference w:world
 
     // 如果上一帧为关键帧，或者单目的情况，则退出
+    // 单目情况下没有深度信息，为什么为关键帧就跳过？ TODO
     if(mnLastKeyFrameId==mLastFrame.mnId || mSensor==System::MONOCULAR)
         return;
 
@@ -1096,7 +1097,7 @@ void Tracking::UpdateLastFrame()
             // b.AddObservation、
             // c.ComputeDistinctiveDescriptors、
             // d.UpdateNormalAndDepth添加属性，
-            // 这些MapPoint仅仅为了提高双目和RGBD的跟踪成功率
+            // 这些MapPoint并没有放进地图之中，仅仅为了提高双目和RGBD的跟踪成功率
             cv::Mat x3D = mLastFrame.UnprojectStereo(i);
             MapPoint* pNewMP = new MapPoint(x3D,mpMap,&mLastFrame,i);
 
@@ -1133,7 +1134,9 @@ bool Tracking::TrackWithMotionModel()
     // Update last frame pose according to its reference keyframe
     // Create "visual odometry" points
     // 步骤1：对于双目或rgbd摄像头，根据深度值为上一关键帧生成新的MapPoints
-    // （跟踪过程中需要将当前帧与上一帧进行特征点匹配，将上一帧的MapPoints投影到当前帧可以缩小匹配范围）
+    // （跟踪过程中需要将当前帧与上一帧进行特征点匹配，将上一帧的MapPoints根据匀速运动投影模型（就是假设变换矩阵跟上一帧的一样），
+    // 投影到当前帧可以缩小匹配范围）
+
     // 在跟踪过程中，去除outlier的MapPoint，如果不及时增加MapPoint会逐渐减少
     // 这个函数的功能就是补充增加RGBD和双目相机上一帧的MapPoints数
     UpdateLastFrame();

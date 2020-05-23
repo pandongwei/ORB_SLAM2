@@ -35,10 +35,10 @@ namespace ORB_SLAM2
 class Sim3Solver
 {
 public:
-
+    // 输入是两帧keyframes以及其匹配关系
     Sim3Solver(KeyFrame* pKF1, KeyFrame* pKF2, const std::vector<MapPoint*> &vpMatched12, const bool bFixScale = true);
-
-    void SetRansacParameters(double probability = 0.99, int minInliers = 6 , int maxIterations = 300);
+    // probability: It specifies a desirable level of confidence (probability) that the estimated matrix is correct.
+    void SetRansacParameters(double probability = 0.99, int minInliers = 6 , int maxIterations = 300); 
 
     cv::Mat find(std::vector<bool> &vbInliers12, int &nInliers);
 
@@ -99,7 +99,8 @@ protected:
     cv::Mat mBestTranslation;
     float mBestScale;
 
-    // Scale is fixed to 1 in the stereo/RGBD case
+    // True: Scale is fixed to 1 in the stereo/RGBD case
+    // False: 需要计算scale,单目中
     bool mbFixScale;
 
     // Indices for random selection
