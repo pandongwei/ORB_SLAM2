@@ -472,10 +472,10 @@ float MapPoint::GetMaxDistanceInvariance()
 }
 
 //              ____
-// Nearer      /____\     level:n-1 --> dmin
-//            /______\                       d/dmin = 1.2^(n-1-m)
-//           /________\   level:m   --> d
-//          /__________\                     dmax/d = 1.2^m
+            // Nearer      /____\     level:n-1 --> dmin
+            //                 /______\                       d/dmin = 1.2^(n-1-m)
+            //             /________\   level:m   --> d
+            //         /__________\                     dmax/d = 1.2^m
 // Farther /____________\ level:0   --> dmax
 //
 //           log(dmax/d)

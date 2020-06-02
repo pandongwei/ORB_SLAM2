@@ -16,7 +16,7 @@
 
 namespace DBoW2 {
 
-/// Base class of scoring functions
+/// Base class of scoring functions  抽象类
 class EXPORT GeneralScoring 
 {
 public:
@@ -27,7 +27,7 @@ public:
    * @param w (in/out)
    * @return score
    */
-  virtual double score(const BowVector &v, const BowVector &w) const = 0;
+  virtual double score(const BowVector &v, const BowVector &w) const = 0; // 纯虚函数
 
   /**
    * Returns whether a vector must be normalized before scoring according

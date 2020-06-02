@@ -752,8 +752,8 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
 }
 
 /**
- * @brief 利用基本矩阵F12，在pKF1和pKF2之间找特征匹配。作用：当pKF1中特征点没有对应的3D点时，通过匹配的特征点产生新的3d点
- * 
+ * @brief 利用基本矩阵F12，在pKF1和pKF2之间找特征匹配。作用：当pKF1中特征点没有对应的3D点时，通过匹配的特征点关联新的3d点
+ *
  * @param pKF1          关键帧1
  * @param pKF2          关键帧2
  * @param F12           基础矩阵

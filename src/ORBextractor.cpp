@@ -805,7 +805,7 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
     // 对金字塔每一层图像提取特征点
     for (int level = 0; level < nlevels; ++level)
     {
-        const int minBorderX = EDGE_THRESHOLD-3;
+        const int minBorderX = EDGE_THRESHOLD-3;  // 确保点不在边缘范围
         const int minBorderY = minBorderX;
         const int maxBorderX = mvImagePyramid[level].cols-EDGE_THRESHOLD+3;
         const int maxBorderY = mvImagePyramid[level].rows-EDGE_THRESHOLD+3;
@@ -849,7 +849,7 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
                 // 在（iniX, iniY）(maxX, maxY)范围内提取FAST关键点, 并开启非极大值抑制（防止在一个很小的区域内提取过多的特征点）
                 vector<cv::KeyPoint> vKeysCell;
                 FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                     vKeysCell,iniThFAST,true);
+                     vKeysCell,iniThFAST,true,);
 
                 // 如果使用iniThFAST默认阈值提取不到特征点则使用最小阈值minThFAST再次提取
                 if(vKeysCell.empty())
@@ -1095,7 +1095,7 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
 
     // Pre-compute the scale pyramid
     // 构建图像金字塔（并包含边界EDGE_THRESHOLD）
-    ComputePyramid(image);
+    ComputePyramid(image);  // 结果存于 mvImagePyramid
 
     // 计算每层图像的兴趣点
     vector < vector<KeyPoint> > allKeypoints; // vector<vector<KeyPoint>>

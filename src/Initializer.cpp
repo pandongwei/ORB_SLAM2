@@ -113,7 +113,7 @@ bool Initializer::Initialize(const Frame &CurrentFrame, const vector<int> &vMatc
             // idx表示哪一个索引对应的特征点被选中
             int idx = vAvailableIndices[randi];
 
-            mvSets[it][j] = idx;
+            mvSets[it][j] = idx; // 这里存放的是每一个迭代中随机选取的八个点的index
 
             // randi对应的索引已经被选过了，从容器中删除
             // randi对应的索引用最后一个元素替换，并删掉最后一个元素
@@ -258,7 +258,7 @@ void Initializer::FindFundamental(vector<bool> &vbMatchesInliers, float &score, 
         }
 
         cv::Mat Fn = ComputeF21(vPn1i,vPn2i);
-
+        // 计算真正的F矩阵，消去归一化的影响
         F21i = T2t*Fn*T1;
 
         // 利用重投影误差为当次RANSAC的结果评分
@@ -374,7 +374,7 @@ cv::Mat Initializer::ComputeF21(const vector<cv::Point2f> &vP1,const vector<cv::
     cv::SVDecomp(A,w,u,vt,cv::SVD::MODIFY_A | cv::SVD::FULL_UV);
 
     cv::Mat Fpre = vt.row(8).reshape(0, 3); // v的最后一列
-
+    
     cv::SVDecomp(Fpre,w,u,vt,cv::SVD::MODIFY_A | cv::SVD::FULL_UV);
 
     w.at<float>(2)=0; // 秩2约束，将第3个奇异值设为0
@@ -518,7 +518,7 @@ float Initializer::CheckFundamental(const cv::Mat &F21, vector<bool> &vbMatchesI
     // 基于卡方检验计算出的阈值（假设测量有一个像素的偏差）
     const float th = 3.841;
     const float thScore = 5.991;
-
+    // 信息矩阵，方差平方的倒数
     const float invSigmaSquare = 1.0/(sigma*sigma);
 
     for(int i=0; i<N; i++)
@@ -580,11 +580,11 @@ float Initializer::CheckFundamental(const cv::Mat &F21, vector<bool> &vbMatchesI
 }
 
 
-//                          |0 -1  0|
+//                                                 |0 -1  0|
 // E = U Sigma V'   let W = |1  0  0|
-//                          |0  0  1|
+//                                              |0  0  1|
 // 得到4个解 E = [R|t]
-// R1 = UWV' R2 = UW'V' t1 = U3 t2 = -U3
+// R1 = UWV'  R2 = UW'V'  t1 = U3  t2 = -U3
 
 /**
  * @brief 从F恢复R t
@@ -982,7 +982,7 @@ void Initializer::Normalize(const vector<cv::KeyPoint> &vKeys, vector<cv::Point2
         meanX += vKeys[i].pt.x;
         meanY += vKeys[i].pt.y;
     }
-
+    // 均值u
     meanX = meanX/N;
     meanY = meanY/N;
 
@@ -998,20 +998,20 @@ void Initializer::Normalize(const vector<cv::KeyPoint> &vKeys, vector<cv::Point2
         meanDevX += fabs(vNormalizedPoints[i].x);
         meanDevY += fabs(vNormalizedPoints[i].y);
     }
-
+    //尺度缩放du
     meanDevX = meanDevX/N;
     meanDevY = meanDevY/N;
-
+    // 1/du
     float sX = 1.0/meanDevX;
     float sY = 1.0/meanDevY;
 
     // 将x坐标和y坐标分别进行尺度缩放，使得x坐标和y坐标的一阶绝对矩分别为1
     for(int i=0; i<N; i++)
-    {
+    {   // 归一化坐标
         vNormalizedPoints[i].x = vNormalizedPoints[i].x * sX;
         vNormalizedPoints[i].y = vNormalizedPoints[i].y * sY;
     }
-
+    // 归一化矩阵
     // |sX  0  -meanx*sX|
     // |0   sY -meany*sY|
     // |0   0      1    |

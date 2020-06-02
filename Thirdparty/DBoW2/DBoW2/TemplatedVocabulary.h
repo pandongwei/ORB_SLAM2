@@ -576,7 +576,7 @@ void TemplatedVocabulary<TDescriptor,F>::create(
   m_nodes.clear();
   m_words.clear();
   
-  // expected_nodes = Sum_{i=0..L} ( k^i )
+  // expected_nodes = Sum_{i=0..L} ( k^i ) ,  m_k 为每次的分支数
   int expected_nodes = 
     (int)((pow((double)m_k, (double)m_L + 1) - 1)/(m_k - 1));
 
@@ -808,7 +808,7 @@ void TemplatedVocabulary<TDescriptor,F>::HKmeansStep(NodeId parent_id,
     m_nodes[parent_id].children.push_back(id);
   }
   
-  // go on with the next level
+  // go on with the next level  这里递归调用
   if(current_level < m_L)
   {
     // iterate again with the resulting clusters
@@ -828,7 +828,7 @@ void TemplatedVocabulary<TDescriptor,F>::HKmeansStep(NodeId parent_id,
 
       if(child_features.size() > 1)
       {
-        HKmeansStep(id, child_features, current_level + 1);
+        HKmeansStep(id, child_features, current_level + 1); // 调用自身知道level数够
       }
     }
   }

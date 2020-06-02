@@ -560,7 +560,7 @@ void Frame::ComputeStereoMatches()
         vRowIndices[i].reserve(200);
 
     const int Nr = mvKeysRight.size();
-
+    
     for(int iR=0; iR<Nr; iR++)
     {
         // !!在这个函数中没有对双目进行校正，双目校正是在外层程序中实现的

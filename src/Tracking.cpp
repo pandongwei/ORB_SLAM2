@@ -373,12 +373,13 @@ void Tracking::Track()
                 // 运动模型是空的或刚完成重定位
                 // mCurrentFrame.mnId<mnLastRelocFrameId+2这个判断不应该有
                 // 应该只要mVelocity不为空，就优先选择TrackWithMotionModel
-                // mnLastRelocFrameId上一次重定位的那一帧
+                // mnLastRelocFrameId上一次重定位的那一帧，如果刚重定位不久
                 if(mVelocity.empty() || mCurrentFrame.mnId<mnLastRelocFrameId+2)
                 {
                     // 将上一帧的位姿作为当前帧的初始位姿
                     // 通过BoW的方式在参考帧中找当前帧特征点的匹配点
                     // 优化每个特征点都对应3D点重投影误差即可得到位姿
+                    // 如果通过重投影误差检测的匹配数大于10，返回true
                     bOK = TrackReferenceKeyFrame();
                 }
                 else
