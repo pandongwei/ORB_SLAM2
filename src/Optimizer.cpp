@@ -113,7 +113,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
     const float thHuber3D = sqrt(7.815);
 
     // Set MapPoint vertices
-    // 步骤2.2：向优化器添加MapPoints顶点
+    // 步骤2.2：向优化器添加MapPoints顶点，遍历所有的胶垫
     for(size_t i=0; i<vpMP.size(); i++)
     {
         MapPoint* pMP = vpMP[i];
@@ -125,7 +125,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
         vPoint->setId(id);
         vPoint->setMarginalized(true);
         optimizer.addVertex(vPoint);
-
+        // 获取能观察到这个map point的所有关键帧 
         const map<KeyFrame*,size_t> observations = pMP->GetObservations();
 
         int nEdges = 0;
@@ -149,7 +149,8 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                 obs << kpUn.pt.x, kpUn.pt.y;
 
                 g2o::EdgeSE3ProjectXYZ* e = new g2o::EdgeSE3ProjectXYZ();
-
+                // 这个map point与相关关键帧的连线边
+                // 所以约束关系主要是帧与边的约束， 帧之间其实没有约束
                 e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
                 e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->mnId)));
                 e->setMeasurement(obs);
@@ -201,7 +202,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                 optimizer.addEdge(e);
             }
         }
-
+        // 如果没有关键帧能观察到这个mappoint，则去掉vertex
         if(nEdges==0)
         {
             optimizer.removeVertex(vPoint);
@@ -221,7 +222,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
     // Recover optimized data
     // 步骤5：得到优化的结果
 
-    //Keyframes
+    //Keyframes,更新结果
     for(size_t i=0; i<vpKFs.size(); i++)
     {
         KeyFrame* pKF = vpKFs[i];
@@ -1220,7 +1221,7 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
  * @param vpMatches1  两个关键帧的匹配关系
  * @param g2oS12      两个关键帧间的Sim3变换
  * @param th2         核函数阈值
- * @param bFixScale   是否优化尺度，弹目进行尺度优化，双目不进行尺度优化
+ * @param bFixScale   是否优化尺度，单目进行尺度优化，双目不进行尺度优化
  */
 int Optimizer::OptimizeSim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale)
 {
